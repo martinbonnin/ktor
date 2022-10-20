@@ -28,58 +28,7 @@ public fun File.readChannel(
     coroutineContext: CoroutineContext = Dispatchers.IO
 ): ByteReadChannel {
     val fileLength = length()
-    return CoroutineScope(coroutineContext).writer(CoroutineName("file-reader") + coroutineContext, autoFlush = false) {
-        require(start >= 0L) { "start position shouldn't be negative but it is $start" }
-        require(endInclusive <= fileLength - 1) {
-            "endInclusive points to the position out of the file: file size = $fileLength, endInclusive = $endInclusive"
-        }
-
-        @Suppress("BlockingMethodInNonBlockingContext")
-        RandomAccessFile(this@readChannel, "r").use { file ->
-            val fileChannel: FileChannel = file.channel
-            if (start > 0) {
-                fileChannel.position(start)
-            }
-
-            if (endInclusive == -1L) {
-                @Suppress("DEPRECATION")
-                channel.writeSuspendSession {
-                    while (true) {
-                        val buffer = request(1)
-                        if (buffer == null) {
-                            channel.flush()
-                            tryAwait(1)
-                            continue
-                        }
-
-                        val rc = fileChannel.read(buffer)
-                        if (rc == -1) break
-                        written(rc)
-                    }
-                }
-
-                return@use
-            }
-
-            var position = start
-            channel.writeWhile { buffer ->
-                val fileRemaining = endInclusive - position + 1
-                val rc = if (fileRemaining < buffer.remaining()) {
-                    val l = buffer.limit()
-                    buffer.limit(buffer.position() + fileRemaining.toInt())
-                    val r = fileChannel.read(buffer)
-                    buffer.limit(l)
-                    r
-                } else {
-                    fileChannel.read(buffer)
-                }
-
-                if (rc > 0) position += rc
-
-                rc != -1 && position <= endInclusive
-            }
-        }
-    }.channel
+    TODO()
 }
 
 /**
@@ -89,13 +38,6 @@ public fun File.readChannel(
  * This is why [coroutineContext] should have [Dispatchers.IO] or
  * a coroutine dispatcher that is properly configured for blocking IO.
  */
-@OptIn(DelicateCoroutinesApi::class)
 public fun File.writeChannel(
     coroutineContext: CoroutineContext = Dispatchers.IO
-): ByteWriteChannel = GlobalScope.reader(CoroutineName("file-writer") + coroutineContext, autoFlush = true) {
-    @Suppress("BlockingMethodInNonBlockingContext")
-    RandomAccessFile(this@writeChannel, "rw").use { file ->
-        val copied = channel.copyTo(file.channel)
-        file.setLength(copied) // truncate tail that could remain from the previously written data
-    }
-}.channel
+): ByteWriteChannel = TODO()

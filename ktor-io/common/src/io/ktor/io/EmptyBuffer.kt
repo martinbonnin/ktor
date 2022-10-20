@@ -15,6 +15,8 @@ internal object EmptyBuffer : Buffer {
         throw IndexOutOfBoundsException("Can't set byte at $index for empty buffer")
     }
 
+    override fun clone(): Buffer = this
+
     override var readIndex: Int
         get() = 0
         set(value) {

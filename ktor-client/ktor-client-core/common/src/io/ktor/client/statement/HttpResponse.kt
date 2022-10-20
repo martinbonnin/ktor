@@ -8,6 +8,7 @@ import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.util.date.*
 import io.ktor.utils.io.*
@@ -84,8 +85,7 @@ internal fun HttpResponse.complete() {
 public suspend fun HttpResponse.bodyAsText(fallbackCharset: Charset = Charsets.UTF_8): String {
     val originCharset = charset() ?: fallbackCharset
     val decoder = originCharset.newDecoder()
-    val input = body<DROP_Input>()
-
+    val input = body<Packet>()
     return decoder.decode(input)
 }
 

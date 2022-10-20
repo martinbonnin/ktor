@@ -7,22 +7,20 @@ package io.ktor.network.sockets
 import io.ktor.network.selector.*
 import io.ktor.network.util.*
 import io.ktor.utils.io.*
-import io.ktor.utils.io.ByteChannel
 import io.ktor.utils.io.pool.*
 import kotlinx.coroutines.*
 import java.nio.*
 import java.nio.channels.*
 
 internal fun CoroutineScope.attachForReadingImpl(
-    channel: ByteChannel,
     nioChannel: ReadableByteChannel,
     selectable: Selectable,
     selector: SelectorManager,
     pool: ObjectPool<ByteBuffer>,
     socketOptions: SocketOptions.TCPClientSocketOptions? = null
-): WriterJob {
+): ByteReadChannel {
     val buffer = pool.borrow()
-    return writer(Dispatchers.Unconfined + CoroutineName("cio-from-nio-reader"), channel) {
+    return writer(Dispatchers.Unconfined + CoroutineName("cio-from-nio-reader")) {
         try {
             val timeout = if (socketOptions?.socketTimeout != null) {
                 createTimeout("reading", socketOptions.socketTimeout) {
@@ -52,7 +50,7 @@ internal fun CoroutineScope.attachForReadingImpl(
                 } else {
                     selectable.interestOp(SelectInterest.READ, false)
                     buffer.flip()
-                    channel.writeFully(buffer)
+                    channel.writeByteBuffer(buffer)
                     buffer.clear()
                 }
             }
@@ -74,12 +72,11 @@ internal fun CoroutineScope.attachForReadingImpl(
 }
 
 internal fun CoroutineScope.attachForReadingDirectImpl(
-    channel: ByteChannel,
     nioChannel: ReadableByteChannel,
     selectable: Selectable,
     selector: SelectorManager,
     socketOptions: SocketOptions.TCPClientSocketOptions? = null
-): WriterJob = writer(Dispatchers.Unconfined + CoroutineName("cio-from-nio-reader"), channel) {
+): ByteReadChannel = writer(Dispatchers.Unconfined + CoroutineName("cio-from-nio-reader")) {
     try {
         selectable.interestOp(SelectInterest.READ, false)
 

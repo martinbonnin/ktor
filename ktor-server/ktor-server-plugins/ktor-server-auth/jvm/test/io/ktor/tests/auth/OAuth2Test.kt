@@ -10,6 +10,7 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.http.auth.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
@@ -23,6 +24,7 @@ import org.json.simple.*
 import java.net.*
 import java.util.concurrent.*
 import kotlin.test.*
+import kotlin.text.toByteArray
 
 @Suppress("DEPRECATION")
 class OAuth2Test {
@@ -91,7 +93,7 @@ class OAuth2Test {
             if (method == HttpMethod.Post) {
                 setBody(
                     runBlocking {
-                        val query = parseQueryString((body as OutgoingContent).toByteReadPacket().readText())
+                        val query = parseQueryString((body as OutgoingContent).toByteReadPacket().readString())
                         val filtered = ParametersBuilder().apply {
                             appendFiltered(query) { key, _ -> key != "state" }
                         }.build()
