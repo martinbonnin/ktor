@@ -57,6 +57,7 @@ public class ConflatedByteChannel : ByteReadChannel, ByteWriteChannel {
     override fun cancel(cause: Throwable?): Boolean {
         if (closed.compareAndSet(null, ClosedCause(cause))) {
             channel.cancel(kotlinx.coroutines.CancellationException("ConflatedByteChannel is cancelled", cause))
+            writablePacket.close()
             return true
         }
 

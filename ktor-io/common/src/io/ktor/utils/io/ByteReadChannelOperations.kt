@@ -40,7 +40,8 @@ public suspend fun ByteReadChannel.copyAndClose(dst: ByteWriteChannel, limit: Lo
     dst.close()
     return count
 }
-public suspend fun ByteReadChannel.readBuffer(): Buffer {
+
+public suspend fun ByteReadChannel.readBuffer(): ReadableBuffer {
     if (availableForRead == 0) awaitBytes()
     return readablePacket.readBuffer()
 }

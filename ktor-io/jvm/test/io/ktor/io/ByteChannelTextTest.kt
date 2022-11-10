@@ -49,9 +49,7 @@ class ByteChannelTextTest {
         val text = ByteReadChannel("\r\n\r\n")
 
         runBlocking {
-            assertEquals(4, text.availableForRead)
             assertEquals("", text.readLine())
-            assertEquals(2, text.availableForRead)
             assertEquals("", text.readLine())
             assertNull(text.readLine())
         }

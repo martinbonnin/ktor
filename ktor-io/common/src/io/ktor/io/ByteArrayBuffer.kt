@@ -37,6 +37,19 @@ public class ByteArrayBuffer(
         return array[index]
     }
 
+    override fun readBuffer(size: Int): ReadableBuffer {
+        val array = array.sliceArray(readIndex until readIndex + size)
+        val result = ByteArrayBuffer(array)
+        readIndex += size
+        return result
+    }
+
+    override fun readArray(): ByteArray {
+        val result = array.sliceArray(readIndex until writeIndex)
+        readIndex = writeIndex
+        return result
+    }
+
     override fun close() {
     }
 
@@ -47,7 +60,6 @@ public class ByteArrayBuffer(
         if (value > writeIndex) {
             throw IllegalArgumentException("Read index($value) must be less than or equal to write index($writeIndex)")
         }
-
     }
 
     private fun checkWriteIndex(value: Int) {

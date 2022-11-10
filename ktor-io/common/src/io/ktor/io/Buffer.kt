@@ -129,7 +129,7 @@ public interface Buffer : ReadableBuffer {
     /**
      * Create a copy of this buffer with new [readIndex] and [writeIndex] sharing the same memory.
      */
-    public fun clone(): Buffer
+    public override fun clone(): Buffer
 
     public companion object {
         public val Empty: Buffer = EmptyBuffer

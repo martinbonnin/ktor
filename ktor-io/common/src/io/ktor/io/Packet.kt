@@ -9,16 +9,17 @@ import io.ktor.utils.io.core.*
 import io.ktor.utils.io.errors.*
 
 public class Packet : Closeable {
-    private val state = ArrayDeque<Buffer>()
+    private val state = ArrayDeque<ReadableBuffer>()
+    private var writeBuffer: Buffer = createBuffer()
 
     public var availableForRead: Int = state.sumOf { it.availableForRead }
         private set
 
-    public fun peek(): Buffer {
+    public fun peek(): ReadableBuffer {
         return state.first()
     }
 
-    public fun readBuffer(): Buffer {
+    public fun readBuffer(): ReadableBuffer {
         val result = state.first()
         state.removeFirst()
         availableForRead -= result.availableForRead
@@ -88,8 +89,9 @@ public class Packet : Closeable {
         return limit
     }
 
-    public fun writeBuffer(buffer: Buffer) {
+    public fun writeBuffer(buffer: ReadableBuffer) {
         state.addLast(buffer)
+        writeBuffer = Buffer.Empty
         availableForRead += buffer.availableForRead
     }
 
@@ -99,19 +101,16 @@ public class Packet : Closeable {
     }
 
     private fun prepareWriteBuffer(count: Int = 1): Buffer {
-        if (state.isEmpty() || state.last().availableForWrite < count) {
-            return appendBuffer()
+        if (writeBuffer.availableForWrite < count) {
+            writeBuffer = createBuffer()
+            state.addLast(writeBuffer)
         }
 
-        return state.last()
+        return writeBuffer
     }
 
-    private fun appendBuffer(): Buffer {
-        val buffer = ByteArrayBuffer(ByteArray(16 * 1024)).apply {
-            writeIndex = 0
-        }
-        state.add(buffer)
-        return buffer
+    private fun createBuffer(): Buffer = ByteArrayBuffer(ByteArray(16 * 1024)).apply {
+        writeIndex = 0
     }
 
     public fun writeShort(value: Short) {
@@ -130,7 +129,16 @@ public class Packet : Closeable {
     }
 
     public fun toByteArray(): ByteArray {
-        TODO()
+        val result = ByteArray(availableForRead)
+        val arrays = state.map { it.readArray() }
+
+        var offset = 0
+        for (array in arrays) {
+            array.copyInto(result, offset)
+            offset += array.size
+        }
+
+        return result
     }
 
     public fun readByteArray(length: Int): ByteArray {
@@ -152,7 +160,7 @@ public class Packet : Closeable {
         length: Int = value.length - offset,
         charset: Charset = Charsets.UTF_8
     ) {
-        TODO("Not yet implemented")
+        writeString(value.substring(offset, offset + length), charset = charset)
     }
 
     public fun writeString(
@@ -161,11 +169,29 @@ public class Packet : Closeable {
         length: Int = value.length - offset,
         charset: Charset = Charsets.UTF_8
     ) {
-        TODO("Not yet implemented")
+        if (charset == Charsets.UTF_8) {
+            val data = value.encodeToByteArray(offset, offset + length)
+            writeByteArray(data)
+            return
+        }
+
+        TODO("Unsupported charset: $charset")
     }
 
     public fun readPacket(length: Int): Packet {
-        TODO("Not yet implemented")
+        var remaining = length
+        val result = Packet()
+        while (remaining > state.first().availableForRead) {
+            remaining -= state.first().availableForRead
+            result.writeBuffer(state.first())
+            state.removeFirst()
+        }
+
+        if (remaining > 0) {
+            result.writeBuffer(state.first().readBuffer(remaining))
+        }
+
+        return result
     }
 
     public fun writePacket(value: Packet) {

@@ -35,7 +35,6 @@ public interface ReadableBuffer : Closeable {
      */
     public fun getByteAt(index: Int): Byte
 
-
     /**
      * Reads [Byte] from the buffer at [readIndex].
      *
@@ -133,7 +132,6 @@ public interface ReadableBuffer : Closeable {
         return Long(highInt, lowInt)
     }
 
-
     /**
      * Reads [Long] from the buffer at [readIndex].
      *
@@ -147,6 +145,12 @@ public interface ReadableBuffer : Closeable {
         return result
     }
 
+    public fun readBuffer(size: Int = availableForRead): ReadableBuffer
+
+    public fun readArray(): ByteArray
+
+    public fun clone(): ReadableBuffer
+
     public companion object {
         /**
          * The empty buffer.
@@ -154,7 +158,6 @@ public interface ReadableBuffer : Closeable {
         public val Empty: ReadableBuffer = EmptyBuffer
     }
 }
-
 
 /**
  * Check if the Buffer has [count] bytes to read.

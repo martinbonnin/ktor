@@ -30,6 +30,13 @@ internal object EmptyBuffer : Buffer {
         throw IndexOutOfBoundsException("Can't get byte at $index for empty buffer")
     }
 
+    override fun readBuffer(size: Int): ReadableBuffer {
+        require(size == 0) { "Can't read $size bytes from empty buffer" }
+        return this
+    }
+
+    override fun readArray(): ByteArray = ByteArray(0)
+
     override fun close() {
     }
 }

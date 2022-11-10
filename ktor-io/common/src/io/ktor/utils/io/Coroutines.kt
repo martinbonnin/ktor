@@ -55,6 +55,7 @@ public fun CoroutineScope.writer(
     launch(coroutineContext) {
         try {
             result.block()
+            result.flush()
         } finally {
             result.close()
         }

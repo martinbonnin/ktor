@@ -16,18 +16,11 @@ public fun ByteWriteChannel.writePacket(packet: Packet) {
 }
 
 /**
- * Writes as much as possible and only suspends if buffer is full
- */
-public suspend fun ByteWriteChannel.writeAvailable(src: ByteArray, offset: Int, length: Int): Int {
-    TODO()
-}
-
-/**
  * Writes long number and suspends until written.
  * Crashes if channel get closed while writing.
  */
 public suspend fun ByteWriteChannel.writeLong(l: Long) {
-    TODO()
+    writablePacket.writeLong(l)
 }
 
 /**
@@ -35,7 +28,7 @@ public suspend fun ByteWriteChannel.writeLong(l: Long) {
  * Crashes if channel get closed while writing.
  */
 public suspend fun ByteWriteChannel.writeInt(i: Int) {
-    TODO()
+    writablePacket.writeInt(i)
 }
 
 /**
@@ -43,7 +36,7 @@ public suspend fun ByteWriteChannel.writeInt(i: Int) {
  * Crashes if channel get closed while writing.
  */
 public suspend fun ByteWriteChannel.writeShort(s: Short) {
-    TODO()
+    writablePacket.writeShort(s)
 }
 
 /**
@@ -51,7 +44,7 @@ public suspend fun ByteWriteChannel.writeShort(s: Short) {
  * Crashes if channel get closed while writing.
  */
 public suspend fun ByteWriteChannel.writeByte(b: Byte) {
-    TODO()
+    writablePacket.writeByte(b)
 }
 
 /**
@@ -59,7 +52,7 @@ public suspend fun ByteWriteChannel.writeByte(b: Byte) {
  * Crashes if channel get closed while writing.
  */
 public suspend fun ByteWriteChannel.writeDouble(d: Double) {
-    TODO()
+    writablePacket.writeDouble(d)
 }
 
 /**
@@ -67,17 +60,17 @@ public suspend fun ByteWriteChannel.writeDouble(d: Double) {
  * Crashes if channel get closed while writing.
  */
 public suspend fun ByteWriteChannel.writeFloat(f: Float) {
-    TODO()
+    writablePacket.writeFloat(f)
 }
 
-public suspend fun ByteWriteChannel.writeByteArray(
+public fun ByteWriteChannel.writeByteArray(
     value: ByteArray,
     offset: Int = 0,
     length: Int = value.size - offset
 ) {
-    TODO()
+    writablePacket.writeBuffer(ByteArrayBuffer(value, offset, length))
 }
 
 public suspend fun ByteWriteChannel.writeString(value: String, charset: Charset = Charsets.UTF_8) {
-    TODO("Not yet implemented")
+    writablePacket.writeString(value, charset = charset)
 }

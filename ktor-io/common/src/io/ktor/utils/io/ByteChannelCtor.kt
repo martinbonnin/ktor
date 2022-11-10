@@ -58,7 +58,7 @@ public fun ByteReadChannel(packet: Packet): ByteReadChannel = object : ByteReadC
 public fun ByteReadChannel(
     block: suspend ByteWriteChannel.() -> Unit
 ): ByteReadChannel = GlobalScope.writer(Dispatchers.Unconfined) {
-    channel.block()
+    block()
 }
 
 public fun ByteReadChannel(text: String, charset: Charset = Charsets.UTF_8): ByteReadChannel = ByteReadChannel {

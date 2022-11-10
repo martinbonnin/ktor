@@ -19,6 +19,14 @@ public class ByteBufferBuffer(
         state.put(index, value)
     }
 
+    override fun readBuffer(size: Int): ReadableBuffer {
+        TODO("Not yet implemented")
+    }
+
+    override fun readArray(): ByteArray {
+        TODO("Not yet implemented")
+    }
+
     override fun clone(): Buffer {
         TODO()
     }
