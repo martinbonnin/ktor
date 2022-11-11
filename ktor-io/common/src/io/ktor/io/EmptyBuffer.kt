@@ -4,6 +4,8 @@
 
 package io.ktor.io
 
+import io.ktor.utils.io.charsets.*
+
 internal object EmptyBuffer : Buffer {
     override var writeIndex: Int
         get() = 0
@@ -28,6 +30,10 @@ internal object EmptyBuffer : Buffer {
 
     override fun getByteAt(index: Int): Byte {
         throw IndexOutOfBoundsException("Can't get byte at $index for empty buffer")
+    }
+
+    override fun readString(charset: Charset): String {
+        throw IndexOutOfBoundsException("Can't get byte at 0 for empty buffer")
     }
 
     override fun readBuffer(size: Int): ReadableBuffer {

@@ -4,6 +4,7 @@
 
 package io.ktor.io
 
+import io.ktor.utils.io.charsets.*
 import java.nio.*
 
 public class ByteBufferBuffer(
@@ -45,5 +46,9 @@ public class ByteBufferBuffer(
     }
 
     override fun close() {
+    }
+
+    override fun readString(charset: Charset): String {
+        TODO("Not yet implemented")
     }
 }

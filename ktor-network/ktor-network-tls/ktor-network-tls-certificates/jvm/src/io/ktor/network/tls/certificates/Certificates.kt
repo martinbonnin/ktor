@@ -95,7 +95,7 @@ internal fun generateX509Certificate(
     ipAddresses: List<InetAddress> = listOf(Inet4Address.getByName("127.0.0.1")),
 ): X509Certificate {
     val now = Instant.now()
-    val certificateBytes = buildPacket {
+    val certificatePacket = buildPacket {
         writeCertificate(
             issuer = issuer,
             subject = subject,
@@ -108,7 +108,8 @@ internal fun generateX509Certificate(
             ipAddresses = ipAddresses,
             keyType = keyType
         )
-    }.toByteArray()
+    }
+    val certificateBytes = certificatePacket.toByteArray()
 
     val cert = CertificateFactory.getInstance("X.509").generateCertificate(certificateBytes.inputStream())
     cert.verify(signerKeyPair.public)

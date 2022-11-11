@@ -4,6 +4,7 @@
 
 package io.ktor.io
 
+import io.ktor.utils.io.charsets.*
 import kotlin.math.*
 
 public class ConcatBuffer(
@@ -30,6 +31,10 @@ public class ConcatBuffer(
         }
 
         return buffers[bufferIndex].getByteAt(index - offset)
+    }
+
+    override fun readString(charset: Charset): String {
+        TODO("Not yet implemented")
     }
 
     override fun readBuffer(size: Int): ReadableBuffer {

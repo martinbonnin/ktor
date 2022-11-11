@@ -4,6 +4,7 @@
 
 package io.ktor.io
 
+import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*
 
 public interface ReadableBuffer : Closeable {
@@ -144,6 +145,8 @@ public interface ReadableBuffer : Closeable {
         readIndex += 8
         return result
     }
+
+    public fun readString(charset: Charset = Charsets.UTF_8): String
 
     public fun readBuffer(size: Int = availableForRead): ReadableBuffer
 

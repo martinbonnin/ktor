@@ -4,6 +4,8 @@
 
 package io.ktor.io
 
+import io.ktor.utils.io.charsets.*
+
 public class ByteArrayBuffer(
     public val array: ByteArray,
     readIndex: Int = 0,
@@ -35,6 +37,14 @@ public class ByteArrayBuffer(
 
     override fun getByteAt(index: Int): Byte {
         return array[index]
+    }
+
+    override fun readString(charset: Charset): String {
+        if (availableForRead == 0) {
+            throw IndexOutOfBoundsException("No bytes available for read")
+        }
+
+        return String(array, readIndex, writeIndex - readIndex, charset)
     }
 
     override fun readBuffer(size: Int): ReadableBuffer {

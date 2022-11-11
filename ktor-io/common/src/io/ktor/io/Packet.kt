@@ -10,7 +10,7 @@ import io.ktor.utils.io.errors.*
 
 public class Packet : Closeable {
     private val state = ArrayDeque<ReadableBuffer>()
-    private var writeBuffer: Buffer = createBuffer()
+    private var writeBuffer: Buffer = Buffer.Empty
 
     public var availableForRead: Int = state.sumOf { it.availableForRead }
         private set
@@ -130,13 +130,19 @@ public class Packet : Closeable {
 
     public fun toByteArray(): ByteArray {
         val result = ByteArray(availableForRead)
-        val arrays = state.map { it.readArray() }
 
         var offset = 0
-        for (array in arrays) {
+        for (buffer in state) {
+            val array = buffer.readArray()
             array.copyInto(result, offset)
             offset += array.size
         }
+
+        check(offset == availableForRead)
+
+        state.clear()
+        availableForRead = 0
+        writeBuffer = Buffer.Empty
 
         return result
     }
@@ -151,7 +157,22 @@ public class Packet : Closeable {
     }
 
     public fun readString(charset: Charset = Charsets.UTF_8): String {
-        TODO("Not yet implemented")
+        if (availableForRead == 0) return ""
+
+        if (state.size == 1) {
+            val buffer = state.removeFirst()
+            val result = buffer.readString(charset)
+            availableForRead = 0
+            return result
+        }
+
+        return buildString {
+            while (state.isNotEmpty()) {
+                append(state.removeFirst().readString(charset))
+            }
+
+            availableForRead = 0
+        }
     }
 
     public fun writeString(
