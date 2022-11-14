@@ -219,8 +219,15 @@ public class Packet : Closeable {
         state.addAll(value.state)
         availableForRead += value.availableForRead
 
+        writeBuffer = if (value.writeBuffer.isNotFull) {
+            value.writeBuffer
+        } else {
+            Buffer.Empty
+        }
+
         value.state.clear()
         value.availableForRead = 0
+        value.writeBuffer = Buffer.Empty
     }
 
     public fun writeUByte(value: UByte) {
@@ -268,6 +275,7 @@ public class Packet : Closeable {
         availableForRead = 0
         state.forEach { it.close() }
         state.clear()
+        writeBuffer = Buffer.Empty
     }
 
     public companion object {

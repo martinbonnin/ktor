@@ -48,6 +48,22 @@ class PacketToArrayTest {
     }
 
     @Test
+    fun testWriteByteAndPacket() {
+        packet.writeByte(42)
+        packet.writePacket(buildPacket {
+            writeByte(10)
+        })
+        packet.writeByte(42)
+
+        val expected = ByteArray(3).apply {
+            set(0, 42)
+            set(1, 10)
+            set(2, 42)
+        }
+        assertArrayEquals(expected, packet.toByteArray())
+    }
+
+    @Test
     fun testWriteShort() {
         packet.writeShort(16004)
         val expected = ByteArray(2).apply {

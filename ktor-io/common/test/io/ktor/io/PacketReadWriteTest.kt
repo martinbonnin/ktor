@@ -4,6 +4,7 @@
 
 package io.ktor.io
 
+import io.ktor.utils.io.core.*
 import kotlin.test.*
 
 class PacketReadWriteTest {
@@ -31,6 +32,19 @@ class PacketReadWriteTest {
         assertEquals(0, packet.readByte())
         assertEquals(0, packet.readByte())
         assertEquals(42, packet.readByte())
+    }
+
+    @Test
+    fun testWriteIntArrayPacketInt() {
+        packet.writeInt(42)
+        packet.writePacket(buildPacket {
+            writeByteArray(ByteArray(1) { 77 })
+        })
+        packet.writeInt(42)
+
+        assertEquals(42, packet.readInt())
+        assertEquals(77, packet.readByte())
+        assertEquals(42, packet.readInt())
     }
 
     @Test
