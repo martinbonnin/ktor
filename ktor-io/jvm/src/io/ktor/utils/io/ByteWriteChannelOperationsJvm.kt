@@ -1,6 +1,10 @@
 package io.ktor.utils.io
 
+import io.ktor.io.*
+import io.ktor.utils.io.pool.*
 import java.nio.*
+
+private val TODO_POOL = ByteBufferPool()
 
 public suspend fun ByteWriteChannel.writeAvailable(src: ByteBuffer): Int {
     TODO()
@@ -41,8 +45,13 @@ public fun ByteWriteChannel.writeAvailable(min: Int = 1, block: (ByteBuffer) -> 
  * @param min amount of bytes available for write, should be positive
  * @param block to be invoked when at least [min] bytes free capacity available
  */
-public suspend fun ByteWriteChannel.write(min: Int = 1, block: (ByteBuffer) -> Unit) {
-    TODO()
+public fun ByteWriteChannel.write(min: Int = 1, block: (ByteBuffer) -> Unit) {
+    val buffer = ByteBuffer.allocate(4096).apply {
+        limit(capacity())
+    }
+
+    block(buffer)
+    writeBuffer(ByteBufferBuffer(buffer))
 }
 
 /**

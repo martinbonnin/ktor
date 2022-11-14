@@ -15,3 +15,11 @@ public fun Packet.writeByteBuffer(value: ByteBuffer) {
     writeBuffer(buffer)
 }
 
+
+public fun ReadableBuffer.readByteBuffer(): ByteBuffer {
+    if (this is WithByteBuffer) {
+        return state
+    }
+
+    return ByteBuffer.wrap(readArray())
+}

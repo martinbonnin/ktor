@@ -1,6 +1,8 @@
 package io.ktor.utils.io.charsets
 
 import io.ktor.io.*
+import io.ktor.utils.io.charsets.Charset
+import io.ktor.utils.io.charsets.Charsets
 import io.ktor.utils.io.core.*
 import io.ktor.utils.io.core.internal.*
 import java.nio.*
@@ -39,7 +41,12 @@ private fun CharsetEncoder.encodeToByteArraySlow(input: CharSequence, fromIndex:
 }
 
 public actual fun CharsetEncoder.encodeUTF8(input: Packet, dst: Packet) {
-    TODO()
+    if (charset == Charsets.UTF_8) {
+        dst.writePacket(input)
+        return
+    }
+
+    TODO("Unsupported charset: $charset")
 }
 
 public actual typealias CharsetDecoder = java.nio.charset.CharsetDecoder
@@ -84,7 +91,13 @@ internal actual fun CharsetEncoder.encodeImpl(
     toIndex: Int,
     dst: Packet
 ): Int {
-    TODO("Not yet implemented")
+    if (charset == Charsets.UTF_8) {
+        val size = toIndex - fromIndex
+        dst.writeString(input, fromIndex, toIndex, charset)
+        return size
+    }
+
+    TODO("Unsupported charset: $charset")
 }
 
 internal actual fun CharsetEncoder.encodeComplete(dst: Packet): Boolean {

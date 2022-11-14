@@ -82,35 +82,35 @@ internal fun CoroutineScope.attachForReadingDirectImpl(
 
         val timeout = if (socketOptions?.socketTimeout != null) {
             createTimeout("reading-direct", socketOptions.socketTimeout) {
-                channel.close(SocketTimeoutException())
+                close(SocketTimeoutException())
             }
         } else {
             null
         }
 
-        while (!channel.isClosedForWrite) {
+        while (!isClosedForWrite) {
             timeout.withTimeout {
-                val rc = channel.readFrom(nioChannel)
+                val rc = readFrom(nioChannel)
 
                 if (rc == -1) {
-                    channel.close()
+                    close()
                     return@withTimeout
                 }
 
                 if (rc > 0) return@withTimeout
 
-                channel.flush()
+                flush()
 
                 while (true) {
                     selectForRead(selectable, selector)
-                    if (channel.readFrom(nioChannel) != 0) break
+                    if (readFrom(nioChannel) != 0) break
                 }
             }
         }
 
         timeout?.finish()
-        channel.closedCause?.let { throw it }
-        channel.close()
+        closedCause?.let { throw it }
+        close()
     } finally {
         if (nioChannel is SocketChannel) {
             try {

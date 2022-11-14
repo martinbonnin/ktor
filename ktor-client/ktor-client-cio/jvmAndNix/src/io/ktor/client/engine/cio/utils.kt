@@ -11,6 +11,7 @@ import io.ktor.client.utils.*
 import io.ktor.http.*
 import io.ktor.http.cio.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.util.date.*
 import io.ktor.utils.io.*
@@ -149,6 +150,7 @@ internal suspend fun readResponse(
                 status.isInformational() -> {
                 ByteReadChannel.Empty
             }
+
             else -> {
                 val coroutineScope = CoroutineScope(callContext + CoroutineName("Response"))
                 coroutineScope.writer {
@@ -225,8 +227,24 @@ internal fun HttpStatusCode.isInformational(): Boolean = (value / 100) == 1
 internal fun ByteWriteChannel.withoutClosePropagation(
     coroutineContext: CoroutineContext,
     closeOnCoroutineCompletion: Boolean = true
-): ByteWriteChannel {
-    TODO()
+): ByteWriteChannel = object : ByteWriteChannel {
+    private val delegate = this@withoutClosePropagation
+    override val isClosedForWrite: Boolean
+        get() = delegate.isClosedForWrite
+
+    override val closedCause: Throwable?
+        get() = delegate.closedCause
+
+    override val writablePacket: Packet
+        get() = delegate.writablePacket
+
+    override fun close(cause: Throwable?): Boolean {
+        return false
+    }
+
+    override suspend fun flush() {
+        delegate.flush()
+    }
 }
 
 /**

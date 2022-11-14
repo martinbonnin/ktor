@@ -4,6 +4,7 @@
 
 package io.ktor.network.sockets
 
+import io.ktor.io.*
 import io.ktor.network.selector.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.pool.*
@@ -19,7 +20,7 @@ internal abstract class NIOSocketImpl<out S>(
     val pool: ObjectPool<ByteBuffer>?,
     private val socketOptions: SocketOptions.TCPClientSocketOptions? = null
 ) : ReadWriteSocket, SelectableBase(channel), CoroutineScope
-    where S : java.nio.channels.ByteChannel, S : SelectableChannel {
+    where S : ByteChannel, S : SelectableChannel {
 
     private val closeFlag = AtomicBoolean()
 
@@ -34,9 +35,11 @@ internal abstract class NIOSocketImpl<out S>(
     //  that will cause broken data
     // however it is not the case for attachForWriting this is why we use direct writing in any case
 
-    final override fun attachForReading(): ByteReadChannel = TODO()
+    final override fun attachForReading(): ByteReadChannel =
+        attachForReadingDirectImpl(channel, this, selector, socketOptions)
 
-    final override fun attachForWriting(): ByteWriteChannel = TODO()
+    final override fun attachForWriting(): ByteWriteChannel =
+        attachForWritingDirectImpl(channel, this, selector, socketOptions)
 
     override fun dispose() {
         close()

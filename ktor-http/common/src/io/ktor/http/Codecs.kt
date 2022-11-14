@@ -52,14 +52,15 @@ public fun String.encodeURLQueryComponent(
     charset: Charset = Charsets.UTF_8
 ): String = buildString {
     val content = charset.newEncoder().encode(this@encodeURLQueryComponent)
-    TODO()
-//    content.forEach {
-//        when {
-//            it == ' '.code.toByte() -> if (spaceToPlus) append('+') else append("%20")
-//            it in URL_ALPHABET || (!encodeFull && it in URL_PROTOCOL_PART) -> append(it.toInt().toChar())
-//            else -> append(it.percentEncode())
-//        }
-//    }
+    val encoded = content.readString()
+    encoded.forEach {
+        val code = it.code.toByte()
+        when {
+            it == ' ' -> if (spaceToPlus) append('+') else append("%20")
+            code in URL_ALPHABET || (!encodeFull && code in URL_PROTOCOL_PART) -> append(it)
+            else -> append(code.percentEncode())
+        }
+    }
 }
 
 /**

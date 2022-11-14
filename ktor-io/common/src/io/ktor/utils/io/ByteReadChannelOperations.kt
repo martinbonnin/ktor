@@ -157,7 +157,11 @@ public suspend fun <A : Appendable> ByteReadChannel.readUTF8LineTo(out: A, limit
 }
 
 public suspend fun ByteReadChannel.readLine(charset: Charset = Charsets.UTF_8, limit: Long = Long.MAX_VALUE): String {
-    TODO("Not yet implemented")
+    if (charset == Charsets.UTF_8) {
+        return buildString { readUTF8LineTo(this, limit) }
+    }
+
+    TODO("Unsupported charset $charset")
 }
 
 /**

@@ -31,7 +31,7 @@ public fun CoroutineScope.mapEngineExceptions(input: ByteReadChannel, request: H
         return input
     }
 
-    TODO()
+    return input // TODO
 }
 
 /**
@@ -40,5 +40,5 @@ public fun CoroutineScope.mapEngineExceptions(input: ByteReadChannel, request: H
  */
 @InternalAPI
 public fun CoroutineScope.mapEngineExceptions(output: ByteWriteChannel, request: HttpRequestData): ByteWriteChannel {
-    TODO()
+    return output // TODO
 }

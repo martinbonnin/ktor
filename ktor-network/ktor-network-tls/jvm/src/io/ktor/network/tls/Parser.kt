@@ -16,6 +16,8 @@ import kotlin.experimental.*
 private const val MAX_TLS_FRAME_SIZE = 0x4800
 
 internal suspend fun ByteReadChannel.readTLSRecord(): TLSRecord {
+    awaitBytes { availableForRead >= 5 }
+
     val type = TLSRecordType.byCode(readByte().toInt() and 0xff)
     val version = readTLSVersion()
 
@@ -130,7 +132,7 @@ internal fun Packet.readECPoint(fieldSize: Int): ECPoint {
 }
 
 
-private suspend fun ByteReadChannel.readTLSVersion() =
+private fun ByteReadChannel.readTLSVersion() =
     TLSVersion.byCode(readShortCompatible() and 0xffff)
 
 private fun Packet.readTLSVersion() =
@@ -139,7 +141,7 @@ private fun Packet.readTLSVersion() =
 internal fun Packet.readTripleByteLength(): Int = (readByte().toInt() and 0xff shl 16) or
     (readShort().toInt() and 0xffff)
 
-internal suspend fun ByteReadChannel.readShortCompatible(): Int {
+internal fun ByteReadChannel.readShortCompatible(): Int {
     val first = readByte().toInt() and 0xff
     val second = readByte().toInt() and 0xff
 

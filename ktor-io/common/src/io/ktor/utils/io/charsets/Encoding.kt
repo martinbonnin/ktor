@@ -22,18 +22,6 @@ public expect abstract class CharsetEncoder
 
 public expect val CharsetEncoder.charset: Charset
 
-@Deprecated(
-    "Use writeText on Output instead.",
-    level = DeprecationLevel.ERROR,
-    replaceWith = ReplaceWith(
-        "dst.writeText(input, fromIndex, toIndex, charset)",
-        "io.ktor.utils.io.core.writeText"
-    )
-)
-public fun CharsetEncoder.encode(input: CharSequence, fromIndex: Int, toIndex: Int, dst: Packet) {
-    TODO()
-}
-
 public expect fun CharsetEncoder.encodeToByteArray(
     input: CharSequence,
     fromIndex: Int = 0,
@@ -60,7 +48,7 @@ public fun CharsetEncoder.encode(
     fromIndex: Int = 0,
     toIndex: Int = input.length
 ): Packet = buildPacket {
-    TODO()
+    encodeImpl(input, fromIndex, toIndex, this)
 }
 
 public fun CharsetEncoder.encodeUTF8(input: Packet): Packet = buildPacket {
@@ -68,7 +56,8 @@ public fun CharsetEncoder.encodeUTF8(input: Packet): Packet = buildPacket {
 }
 
 public fun CharsetEncoder.encode(input: CharArray, fromIndex: Int, toIndex: Int, dst: Packet) {
-    TODO()
+    val sequence = CharArraySequence(input, fromIndex, fromIndex + toIndex)
+    encodeImpl(sequence, 0, sequence.length, dst)
 }
 
 // ----------------------------- DECODER -------------------------------------------------------------------------------
@@ -80,7 +69,9 @@ public expect abstract class CharsetDecoder
  */
 public expect val CharsetDecoder.charset: Charset
 
-public fun CharsetDecoder.decode(input: Packet, max: Int = Int.MAX_VALUE): String = TODO()
+public fun CharsetDecoder.decode(input: Packet, max: Int = Int.MAX_VALUE): String = buildString {
+    decodeBuffer(input, this, true, max)
+}
 
 public expect fun CharsetDecoder.decode(input: Packet, dst: Appendable, max: Int): Int
 

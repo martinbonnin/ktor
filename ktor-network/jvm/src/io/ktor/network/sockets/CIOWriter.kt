@@ -4,6 +4,7 @@
 
 package io.ktor.network.sockets
 
+import io.ktor.io.*
 import io.ktor.network.selector.*
 import io.ktor.network.util.*
 import io.ktor.utils.io.*
@@ -70,56 +71,59 @@ internal fun CoroutineScope.attachForWritingDirectImpl(
     selectable: Selectable,
     selector: SelectorManager,
     socketOptions: SocketOptions.TCPClientSocketOptions? = null
-): ByteWriteChannel = reader(Dispatchers.Unconfined + CoroutineName("cio-to-nio-writer")) {
-    selectable.interestOp(SelectInterest.WRITE, false)
-    try {
-        @Suppress("DEPRECATION")
-        channel.lookAheadSuspend {
-            val timeout = if (socketOptions?.socketTimeout != null) {
-                createTimeout("writing-direct", socketOptions.socketTimeout) {
-                    channel.cancel(SocketTimeoutException())
-                }
-            } else {
-                null
-            }
-
-            while (true) {
-                val buffer = request(0, 1)
-                if (buffer == null) {
-//                        if (channel.isClosedForRead) break
-                    if (!awaitAtLeast(1)) break
-                    continue
-                }
-
-                while (buffer.hasRemaining()) {
-                    var rc = 0
-
-                    timeout.withTimeout {
-                        do {
-                            rc = nioChannel.write(buffer)
-                            if (rc == 0) {
-                                selectable.interestOp(SelectInterest.WRITE, true)
-                                selector.select(selectable, SelectInterest.WRITE)
-                            }
-                        } while (buffer.hasRemaining() && rc == 0)
-                    }
-
-                    consumed(rc)
-                }
-            }
-            timeout?.finish()
-        }
-    } finally {
+): ByteWriteChannel = object : ByteWriteChannel {
+    init {
         selectable.interestOp(SelectInterest.WRITE, false)
-        if (nioChannel is SocketChannel) {
-            try {
-                if (java7NetworkApisAvailable) {
-                    nioChannel.shutdownOutput()
-                } else {
-                    nioChannel.socket().shutdownOutput()
-                }
-            } catch (ignore: ClosedChannelException) {
+    }
+
+    override var isClosedForWrite: Boolean = false
+        private set
+
+    override var closedCause: Throwable? = null
+        private set
+
+    override val writablePacket: Packet = Packet()
+
+    override fun close(cause: Throwable?): Boolean {
+        if (isClosedForWrite || closedCause != null) return false
+        isClosedForWrite = true
+        closedCause = cause
+
+        runBlocking {
+            flush()
+        }
+
+        selectable.interestOp(SelectInterest.WRITE, false)
+        if (nioChannel !is SocketChannel) return true
+
+        try {
+            if (java7NetworkApisAvailable) {
+                nioChannel.shutdownOutput()
+            } else {
+                nioChannel.socket().shutdownOutput()
             }
+        } catch (ignore: ClosedChannelException) {
+        }
+
+        return true
+    }
+
+    // TODO: timeouts
+    override suspend fun flush() {
+        while (writablePacket.isNotEmpty) {
+            val buffer = writablePacket.readBuffer()
+
+            val data: ByteBuffer = buffer.readByteBuffer()
+            if (!data.hasRemaining()) continue
+            var rc = 0
+
+            do {
+                rc = nioChannel.write(data)
+                if (rc == 0) {
+                    selectable.interestOp(SelectInterest.WRITE, true)
+                    selector.select(selectable, SelectInterest.WRITE)
+                }
+            } while (data.hasRemaining() && rc == 0)
         }
     }
 }
