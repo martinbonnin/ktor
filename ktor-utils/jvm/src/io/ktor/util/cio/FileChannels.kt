@@ -4,15 +4,9 @@
 
 package io.ktor.util.cio
 
-import io.ktor.util.*
 import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
-import io.ktor.utils.io.jvm.nio.*
-import io.ktor.utils.io.pool.*
 import kotlinx.coroutines.*
 import java.io.*
-import java.nio.*
-import java.nio.channels.*
 import kotlin.coroutines.*
 
 /**
@@ -28,11 +22,15 @@ public fun File.readChannel(
     coroutineContext: CoroutineContext = Dispatchers.IO
 ): ByteReadChannel {
     val fileLength = length()
-    TODO()
+    require(start < endInclusive)
+    require(endInclusive == -1L || endInclusive < fileLength)
+
+    val endIndex = if (endInclusive < 0) fileLength else endInclusive + 1
+    return FileReadChannel(this, start, endIndex)
 }
 
 /**
- * Open a write channel for the file and launch a coroutine to read from it.
+ * Open [ByteWriteChannel] for the file and launch a coroutine to read from it.
  * Please note that file writing is blocking so if you are starting it on [Dispatchers.Unconfined] it may block
  * your async code and freeze the whole application when runs on a pool that is not intended for blocking operations.
  * This is why [coroutineContext] should have [Dispatchers.IO] or
@@ -41,3 +39,4 @@ public fun File.readChannel(
 public fun File.writeChannel(
     coroutineContext: CoroutineContext = Dispatchers.IO
 ): ByteWriteChannel = TODO()
+

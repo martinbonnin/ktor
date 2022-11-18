@@ -25,7 +25,13 @@ public class ByteBufferBuffer(
     }
 
     override fun readArray(): ByteArray {
-        TODO("Not yet implemented")
+        if (state.hasArray()) {
+            val result = state.array().sliceArray(readIndex until writeIndex)
+            readIndex = writeIndex
+            return result
+        }
+
+        TODO("Direct buffers are not supported")
     }
 
     override fun clone(): Buffer {
@@ -49,6 +55,14 @@ public class ByteBufferBuffer(
     }
 
     override fun readString(charset: Charset): String {
-        TODO("Not yet implemented")
+        if (charset != Charsets.UTF_8) {
+            TODO("Chraset $charset is not supported")
+        }
+
+        if (!state.hasArray()) {
+            TODO("Only buffers with array are supported")
+        }
+
+        return String(state.array(), state.arrayOffset() + state.position(), state.remaining())
     }
 }

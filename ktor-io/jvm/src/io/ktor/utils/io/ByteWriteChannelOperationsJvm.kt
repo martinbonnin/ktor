@@ -46,12 +46,13 @@ public fun ByteWriteChannel.writeAvailable(min: Int = 1, block: (ByteBuffer) -> 
  * @param block to be invoked when at least [min] bytes free capacity available
  */
 public fun ByteWriteChannel.write(min: Int = 1, block: (ByteBuffer) -> Unit) {
-    val buffer = ByteBuffer.allocate(4096).apply {
-        limit(capacity())
-    }
-
+    val buffer = ByteBuffer.allocate(4096)
     block(buffer)
-    writeBuffer(ByteBufferBuffer(buffer))
+
+    buffer.flip()
+    if (buffer.hasRemaining()) {
+        writeBuffer(ByteBufferBuffer(buffer))
+    }
 }
 
 /**

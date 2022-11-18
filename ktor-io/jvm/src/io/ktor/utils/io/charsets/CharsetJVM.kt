@@ -82,9 +82,6 @@ actual constructor(message: String) : java.nio.charset.MalformedInputException(0
         get() = _message
 }
 
-private val EmptyCharBuffer = CharBuffer.allocate(0)
-private val EmptyByteBuffer = ByteBuffer.allocate(0)!!
-
 internal actual fun CharsetEncoder.encodeImpl(
     input: CharSequence,
     fromIndex: Int,

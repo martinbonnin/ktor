@@ -32,7 +32,7 @@ public class ConflatedByteChannel : ByteReadChannel, ByteWriteChannel {
 
     override suspend fun awaitBytes(predicate: () -> Boolean): Boolean {
         while (!predicate()) {
-            val value = channel.tryReceive()
+            val value = channel.receiveCatching()
             when {
                 value.isClosed -> {
                     closed.value = ClosedCause(value.exceptionOrNull())

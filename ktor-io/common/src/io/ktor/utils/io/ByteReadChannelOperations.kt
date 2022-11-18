@@ -7,6 +7,7 @@ package io.ktor.utils.io
 import io.ktor.io.*
 import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*
+import io.ktor.utils.io.errors.*
 
 public val ByteReadChannel.availableForRead: Int get() = readablePacket.availableForRead
 
@@ -27,7 +28,18 @@ public suspend fun ByteReadChannel.copyTo(dst: ByteWriteChannel, limit: Long = L
         return 0L
     }
 
-    TODO()
+    var remaining = limit
+    while (!isClosedForRead && remaining > 0) {
+        if (readablePacket.isEmpty) {
+            awaitBytes()
+            continue
+        }
+
+        remaining -= readablePacket.availableForRead
+        dst.writePacket(readablePacket)
+    }
+
+    return limit - remaining
 }
 
 /**
@@ -128,20 +140,42 @@ public fun ByteReadChannel.readFloat(): Float {
  * and not enough bytes available.
  */
 public suspend fun ByteReadChannel.readPacket(size: Int): Packet {
-    TODO()
+    awaitBytes { availableForRead < size }
+    check(availableForRead >= size)
+
+    val result = Packet()
+    var remaining = size
+
+    while (remaining > 0) {
+        val buffer = result.peek()
+        if (buffer.availableForRead < remaining) {
+            remaining -= buffer.availableForRead
+            result.writeBuffer(readablePacket.readBuffer())
+        } else {
+            remaining = 0
+            result.writeBuffer(buffer.readBuffer(remaining))
+        }
+    }
+
+    return result
 }
 
 /**
  * Reads up to [limit] bytes and makes a byte packet or until end of stream encountered.
  */
-public suspend fun ByteReadChannel.readRemaining(limit: Long = Long.MAX_VALUE): Packet {
-    val result = buildPacket {
-        while (awaitBytes()) {
-            writePacket(readablePacket)
+public suspend fun ByteReadChannel.readRemaining(limit: Long = Long.MAX_VALUE): Packet = buildPacket {
+    var remaining = limit
+    while (!isClosedForRead) {
+        if (readablePacket.isEmpty) awaitBytes()
+        val packet = if (remaining >= readablePacket.availableForRead) {
+            readablePacket
+        } else {
+            readablePacket.readPacket(remaining.toInt())
         }
-    }
 
-    return result
+        remaining -= packet.availableForRead
+        writePacket(packet)
+    }
 }
 
 /**
@@ -153,7 +187,99 @@ public suspend fun ByteReadChannel.readRemaining(limit: Long = Long.MAX_VALUE): 
  * and no characters were read.
  */
 public suspend fun <A : Appendable> ByteReadChannel.readUTF8LineTo(out: A, limit: Long = Long.MAX_VALUE): Boolean {
-    TODO()
+    if (isClosedForRead) return false
+    if (readablePacket.isEmpty) awaitBytes()
+    if (isClosedForRead) return false
+
+    val buffer = readablePacket.peek()
+    val oldIndex = buffer.readIndex
+    val string = buffer.readString()
+
+    val newLine = string.indexOf('\n')
+    if (newLine == -1) {
+        if (string.length > limit) {
+            throw IOException("Line limit exceeded: $limit")
+        }
+
+        readablePacket.readBuffer()
+        return readUTF8LineRemaining(string, out, limit)
+    }
+
+    val endIndex = if (newLine > 0 && string[newLine - 1] == '\r') newLine - 1 else newLine
+
+    if (endIndex > limit) {
+        throw IOException("Line length limit exceeded: $endIndex > $limit")
+    }
+
+    val bytesLength = string.lengthInUtf8Bytes(newLine + 2)
+    buffer.readIndex = oldIndex
+    readablePacket.discardExact(bytesLength)
+    out.append(string, 0, endIndex)
+
+    return true
+}
+
+private suspend fun <A : Appendable> ByteReadChannel.readUTF8LineRemaining(
+    prefix: String,
+    out: A,
+    limit: Long
+): Boolean {
+    val builder = StringBuilder(prefix)
+    var remaining = limit - prefix.length
+    while (remaining > 0) {
+        if (availableForRead == 0) awaitBytes()
+        if (isClosedForRead) {
+            out.append(builder)
+            return false
+        }
+
+        val buffer = readablePacket.peek()
+        val oldIndex = buffer.readIndex
+        val string = buffer.readString()
+
+        val newLine = string.indexOf('\n')
+        if (newLine == -1) {
+            readablePacket.readBuffer()
+
+            if (string.length > remaining) {
+                throw IOException("Line limit exceeded: $limit")
+            }
+
+            builder.append(string)
+            remaining -= string.length
+            continue
+        }
+
+        val endIndex = if (newLine > 0 && string[newLine - 1] == '\r') newLine - 1 else newLine
+        if (endIndex > limit) {
+            throw IOException("Line length limit exceeded: $endIndex > $limit")
+        }
+
+        val bytesLength = string.lengthInUtf8Bytes(newLine + 1)
+        buffer.readIndex = oldIndex
+        readablePacket.discardExact(bytesLength)
+        builder.append(string, 0, endIndex)
+        out.append(builder)
+        return true
+    }
+
+    throw EOFException("Line limit exceeded: $limit")
+}
+
+private fun String.lengthInUtf8Bytes(endIndex: Int): Int {
+    var index = 0
+    var result = 0
+    while (index < endIndex) {
+        val c = this[index++].code
+        result += when {
+            c < 0x80 -> 1
+            c < 0x800 -> 2
+            c < 0xd800 || c > 0xdfff -> 3
+            else -> 4
+        }
+    }
+
+    return result
 }
 
 public suspend fun ByteReadChannel.readLine(charset: Charset = Charsets.UTF_8, limit: Long = Long.MAX_VALUE): String {
