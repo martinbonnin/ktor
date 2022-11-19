@@ -41,7 +41,12 @@ internal object EmptyBuffer : Buffer {
         return this
     }
 
-    override fun readArray(): ByteArray = ByteArray(0)
+    override fun readByteArray(size: Int): ByteArray {
+        require(size == 0) { "Can't read $size bytes from empty buffer" }
+        return ByteArray(0)
+    }
+
+    override fun toByteArray(): ByteArray = ByteArray(0)
 
     override fun close() {
     }

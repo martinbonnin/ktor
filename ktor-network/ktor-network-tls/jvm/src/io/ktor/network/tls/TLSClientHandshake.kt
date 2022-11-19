@@ -86,6 +86,7 @@ internal class TLSClientHandshake(
                     }
                 }
 
+                println("Send tls record, ${packet.availableForRead}")
                 channel.send(TLSRecord(record.type, packet = packet))
             }
         } catch (cause: ClosedReceiveChannelException) {
@@ -129,7 +130,7 @@ internal class TLSClientHandshake(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val handshakes = produce<TLSHandshake>(CoroutineName("cio-tls-handshake")) {
+    private val handshakes = produce(CoroutineName("cio-tls-handshake")) {
         while (true) {
             val record = input.receive()
             if (record.type != TLSRecordType.Handshake) {

@@ -63,12 +63,16 @@ public class ConcatBuffer(
         return result
     }
 
-    override fun readArray(): ByteArray {
+    override fun readByteArray(size: Int): ByteArray {
+        TODO("Not yet implemented")
+    }
+
+    override fun toByteArray(): ByteArray {
         val result = ByteArray(availableForRead)
         var offset = 0
         while (buffers.isNotEmpty()) {
             val current = buffers.first()
-            val read = current.readArray()
+            val read = current.toByteArray()
             read.copyInto(result, offset)
             offset += read.size
             if (current.isEmpty) buffers.removeFirst()

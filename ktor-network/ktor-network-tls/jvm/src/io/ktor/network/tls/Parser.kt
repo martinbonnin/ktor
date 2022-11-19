@@ -109,7 +109,8 @@ internal fun Packet.readTLSCertificate(): List<Certificate> {
         val certificate = readPacket(certificateLength)
         certificateBase += certificateLength + 3
 
-        val x509 = factory.generateCertificate(certificate.toInputStream())
+        val stream = certificate.toInputStream()
+        val x509 = factory.generateCertificate(stream)
         result.add(x509)
     }
 

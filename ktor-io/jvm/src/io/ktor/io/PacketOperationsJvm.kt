@@ -6,4 +6,4 @@ package io.ktor.io
 
 import java.io.*
 
-public fun Packet.toInputStream(): InputStream = TODO()
+public fun Packet.toInputStream(): InputStream = ByteArrayInputStream(toByteArray())

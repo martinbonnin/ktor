@@ -21,12 +21,23 @@ public class ByteBufferBuffer(
     }
 
     override fun readBuffer(size: Int): ReadableBuffer {
-        TODO("Not yet implemented")
+        require(size <= availableForRead)
+
+        val newState = state.slice().apply {
+            limit(size)
+        }
+
+        readIndex += size
+
+        return ByteBufferBuffer(newState)
     }
 
-    override fun readArray(): ByteArray {
+    override fun toByteArray(): ByteArray {
         if (state.hasArray()) {
-            val result = state.array().sliceArray(readIndex until writeIndex)
+            val arrayOffset = state.arrayOffset()
+            val startIndex = readIndex + arrayOffset
+            val endIndex = writeIndex + arrayOffset
+            val result = state.array().sliceArray(startIndex until endIndex)
             readIndex = writeIndex
             return result
         }
@@ -34,8 +45,23 @@ public class ByteBufferBuffer(
         TODO("Direct buffers are not supported")
     }
 
+    override fun readByteArray(size: Int): ByteArray {
+        require(size <= availableForRead)
+        if (state.hasArray()) {
+            val arrayOffset = state.arrayOffset()
+            val startIndex = readIndex + arrayOffset
+            val endIndex = startIndex + size
+            val result = state.array().sliceArray(startIndex until endIndex)
+            readIndex += size
+
+            return result
+        }
+
+        TODO("Can't read from direct buffer")
+    }
+
     override fun clone(): Buffer {
-        TODO()
+        return ByteBufferBuffer(state.duplicate())
     }
 
     override var readIndex: Int

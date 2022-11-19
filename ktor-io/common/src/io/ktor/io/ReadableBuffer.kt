@@ -150,7 +150,9 @@ public interface ReadableBuffer : Closeable {
 
     public fun readBuffer(size: Int = availableForRead): ReadableBuffer
 
-    public fun readArray(): ByteArray
+    public fun readByteArray(size: Int): ByteArray
+
+    public fun toByteArray(): ByteArray
 
     public fun clone(): ReadableBuffer
 

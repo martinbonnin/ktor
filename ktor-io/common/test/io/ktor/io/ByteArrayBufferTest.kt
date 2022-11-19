@@ -12,7 +12,7 @@ class ByteArrayBufferTest {
     fun testEmptyToByteArray() {
         val buffer = ByteArrayBuffer(ByteArray(0))
         assertTrue {
-            ByteArray(0).contentEquals(buffer.readArray())
+            ByteArray(0).contentEquals(buffer.toByteArray())
         }
     }
 }

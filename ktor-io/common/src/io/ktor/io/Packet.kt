@@ -140,7 +140,7 @@ public class Packet : Closeable {
 
         var offset = 0
         for (buffer in state) {
-            val array = buffer.readArray()
+            val array = buffer.toByteArray()
             array.copyInto(result, offset)
             offset += array.size
         }
@@ -155,7 +155,13 @@ public class Packet : Closeable {
     }
 
     public fun readByteArray(length: Int): ByteArray {
-        TODO()
+        require(availableForRead >= length)
+
+        if (state.first().availableForRead >= length) {
+            return state.first().readByteArray(length)
+        }
+
+        TODO("Can't read from sliced arrays")
     }
 
     public fun writeByteArray(array: ByteArray, offset: Int = 0, length: Int = array.size - offset) {
@@ -207,11 +213,11 @@ public class Packet : Closeable {
     }
 
     public fun readPacket(length: Int): Packet {
-        require(length > availableForRead)
+        require(availableForRead >= length)
 
         var remaining = length
         val result = Packet()
-        while (remaining > state.first().availableForRead) {
+        while (state.isNotEmpty() && remaining > state.first().availableForRead) {
             remaining -= state.first().availableForRead
             result.writeBuffer(state.first())
             state.removeFirst()

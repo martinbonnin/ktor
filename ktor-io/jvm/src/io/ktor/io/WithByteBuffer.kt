@@ -21,5 +21,5 @@ public fun ReadableBuffer.readByteBuffer(): ByteBuffer {
         return state
     }
 
-    return ByteBuffer.wrap(readArray())
+    return ByteBuffer.wrap(toByteArray())
 }

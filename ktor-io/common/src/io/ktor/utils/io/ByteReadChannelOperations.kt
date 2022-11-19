@@ -140,20 +140,23 @@ public fun ByteReadChannel.readFloat(): Float {
  * and not enough bytes available.
  */
 public suspend fun ByteReadChannel.readPacket(size: Int): Packet {
-    awaitBytes { availableForRead < size }
+    if (availableForRead < size) {
+        awaitBytes { availableForRead >= size }
+    }
+
     check(availableForRead >= size)
 
     val result = Packet()
     var remaining = size
 
     while (remaining > 0) {
-        val buffer = result.peek()
+        val buffer = readablePacket.peek()
         if (buffer.availableForRead < remaining) {
             remaining -= buffer.availableForRead
             result.writeBuffer(readablePacket.readBuffer())
         } else {
-            remaining = 0
             result.writeBuffer(buffer.readBuffer(remaining))
+            remaining = 0
         }
     }
 
