@@ -26,6 +26,7 @@ jackson-version = "2.14.0"
 
 junit-version = "4.13.2"
 slf4j-version = "2.0.4"
+logback-version = "1.4.5"
 
 
 dropwizard-version = "4.2.10"
