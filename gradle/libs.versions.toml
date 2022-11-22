@@ -51,12 +51,11 @@ webjars-jquery-version = "3.6.1"
 thymeleaf-version = "3.1.0.RELEASE"
 
 xmlutil-version = "1.4.1"
+yamlkt-version = "0.12.0"
 
 node-fetch-version = "2.6.7"
 abort-controller-version = "3.0.0"
 ws-version = "8.5.0"
-xmlutil-version = "0.84.0"
-yamlkt-version = "0.11.0"
 
 [libraries]
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin-version" }
