@@ -28,6 +28,7 @@ junit-version = "4.13.2"
 slf4j-version = "2.0.4"
 logback-version = "1.4.5"
 
+dropwizard-version = "4.2.13"
 
 dropwizard-version = "4.2.10"
 micrometer-version = "1.7.5"
