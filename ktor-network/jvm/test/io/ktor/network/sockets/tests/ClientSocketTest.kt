@@ -64,6 +64,7 @@ class ClientSocketTest {
 
         client { socket ->
             val channel = socket.attachForReading()
+            channel.awaitBytes { channel.availableForRead >= 3 }
             val array = channel.readArray(3)
             assertEquals("123", String(array))
         }

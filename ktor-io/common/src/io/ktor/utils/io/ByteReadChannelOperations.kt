@@ -214,7 +214,7 @@ public suspend fun <A : Appendable> ByteReadChannel.readUTF8LineTo(out: A, limit
         throw IOException("Line length limit exceeded: $endIndex > $limit")
     }
 
-    val bytesLength = string.lengthInUtf8Bytes(newLine + 2)
+    val bytesLength = string.lengthInUtf8Bytes(newLine + 1)
     buffer.readIndex = oldIndex
     readablePacket.discardExact(bytesLength)
     out.append(string, 0, endIndex)
@@ -285,9 +285,11 @@ private fun String.lengthInUtf8Bytes(endIndex: Int): Int {
     return result
 }
 
-public suspend fun ByteReadChannel.readLine(charset: Charset = Charsets.UTF_8, limit: Long = Long.MAX_VALUE): String {
+public suspend fun ByteReadChannel.readLine(charset: Charset = Charsets.UTF_8, limit: Long = Long.MAX_VALUE): String? {
     if (charset == Charsets.UTF_8) {
-        return buildString { readUTF8LineTo(this, limit) }
+        val builder = StringBuilder()
+        if (!readUTF8LineTo(builder)) return null
+        return builder.toString()
     }
 
     TODO("Unsupported charset $charset")
@@ -303,5 +305,5 @@ public suspend fun ByteReadChannel.discard(max: Long = Long.MAX_VALUE): Long {
 }
 
 public suspend fun ByteReadChannel.readString(charset: Charset = Charsets.UTF_8): String {
-    TODO("Not yet implemented")
+    return readRemaining().readString(charset)
 }

@@ -58,6 +58,10 @@ internal class FileReadChannel(
             }
         }
 
+        if (remaining == 0L) {
+            isClosedForRead = true
+        }
+
         return@withContext true
     }
 

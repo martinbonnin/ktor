@@ -6,12 +6,14 @@ import java.nio.*
 
 private val TODO_POOL = ByteBufferPool()
 
-public suspend fun ByteWriteChannel.writeAvailable(src: ByteBuffer): Int {
-    TODO()
+public fun ByteWriteChannel.writeAvailable(src: ByteBuffer): Int {
+    val result = src.remaining()
+    writeBuffer(ByteBufferBuffer(src))
+    return result
 }
 
-public suspend fun ByteWriteChannel.writeByteBuffer(src: ByteBuffer) {
-    TODO()
+public fun ByteWriteChannel.writeByteBuffer(src: ByteBuffer) {
+    writeBuffer(ByteBufferBuffer(src))
 }
 
 /**

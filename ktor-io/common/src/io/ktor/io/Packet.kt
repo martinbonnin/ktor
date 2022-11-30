@@ -78,6 +78,7 @@ public class Packet : Closeable {
             val current = state.first()
             if (current.availableForRead > remaining) {
                 current.discard(remaining)
+                remaining = 0
                 break
             }
 
@@ -145,7 +146,7 @@ public class Packet : Closeable {
             offset += array.size
         }
 
-        check(offset == availableForRead) { "offset is < available for read: $offset < $availableForRead" }
+        check(offset == availableForRead) { "Total read size is < available for read: $offset < $availableForRead" }
 
         state.clear()
         availableForRead = 0
@@ -248,27 +249,22 @@ public class Packet : Closeable {
     }
 
     public fun writeUByte(value: UByte) {
-        availableForRead += 1
         writeByte(value.toByte())
     }
 
     public fun writeDouble(value: Double) {
-        availableForRead += 8
         writeLong(value.toBits())
     }
 
     public fun writeFloat(value: Float) {
-        availableForRead += 4
         writeInt(value.toBits())
     }
 
     public fun readDouble(): Double {
-        availableForRead -= 4
         return Double.fromBits(readLong())
     }
 
     public fun readFloat(): Float {
-        availableForRead -= 4
         return Float.fromBits(readInt())
     }
 

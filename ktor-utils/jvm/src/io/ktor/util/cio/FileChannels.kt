@@ -22,7 +22,8 @@ public fun File.readChannel(
     coroutineContext: CoroutineContext = Dispatchers.IO
 ): ByteReadChannel {
     val fileLength = length()
-    require(start < endInclusive)
+    require(start >= 0)
+    require(endInclusive == -1L || start < endInclusive)
     require(endInclusive == -1L || endInclusive < fileLength)
 
     val endIndex = if (endInclusive < 0) fileLength else endInclusive + 1
