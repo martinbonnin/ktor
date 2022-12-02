@@ -60,7 +60,19 @@ public class Auth private constructor(
                     val (provider, authHeader) = when {
                         authHeaders.isEmpty() && candidateProviders.size == 1 -> candidateProviders.first() to null
                         authHeaders.isEmpty() -> return@intercept call
-                        else -> findProviderAndHeader(candidateProviders, authHeaders) ?: return@intercept call
+                        else -> {
+                            var provider: AuthProvider? = null
+                            val header = authHeaders.find { header ->
+                                provider = candidateProviders.find {
+                                    it.isApplicable(header)
+                                }
+                                provider != null
+                            }
+                            if (provider == null || header == null) {
+                                return@intercept call
+                            }
+                            provider to header
+                        }
                     }
                     if (!provider.refreshToken(call.response)) return@intercept call
 
@@ -75,21 +87,6 @@ public class Auth private constructor(
                 }
                 return@intercept call
             }
-        }
-
-        private fun findProviderAndHeader(
-            providers: Collection<AuthProvider>,
-            authHeaders: List<HttpAuthHeader>
-        ): Pair<AuthProvider, HttpAuthHeader>? {
-            authHeaders.forEach { header ->
-                providers.forEach { provider ->
-                    if (provider.isApplicable(header)) {
-                        return provider to header
-                    }
-                }
-            }
-
-            return null
         }
     }
 }

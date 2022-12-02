@@ -152,6 +152,25 @@ internal fun Application.authTestServer() {
                     call.respond("OK")
                 }
             }
+
+            get("multiple") {
+                val header = call.request.headers[HttpHeaders.Authorization] ?: ""
+
+                with(header) {
+                    when {
+                        contains("Basic") -> call.respondRedirect("/auth/basic-fixed")
+                        contains("Digest") -> call.respondRedirect("/auth/digest")
+                        contains("Bearer") -> call.respondRedirect("/auth/bearer/first")
+                        else -> {
+                            call.response.header(
+                                HttpHeaders.WWWAuthenticate,
+                                "Basic realm=\"TestServer\", charset=UTF-8, Digest, Bearer realm=\"my-server\""
+                            )
+                            call.respond(HttpStatusCode.Unauthorized)
+                        }
+                    }
+                }
+            }
         }
     }
 }

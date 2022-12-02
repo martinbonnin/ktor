@@ -535,4 +535,27 @@ class AuthTest : ClientLoader() {
             assertEquals(2, loadCount)
         }
     }
+
+    @Test
+    fun testMultipleChallenges() = clientTests {
+        config {
+            install(Auth) {
+                basic {
+                    credentials { BasicAuthCredentials("Invalid", "Invalid") }
+                }
+                bearer {
+                    loadTokens { BearerTokens("first", "first") }
+
+                    refreshTokens {
+                        val token = clientWithAuth.get("$TEST_SERVER/auth/bearer/token/second").bodyAsText()
+                        BearerTokens(token, token)
+                    }
+                }
+            }
+        }
+        test { client ->
+            val response = client.get("$TEST_SERVER/auth/multiple").bodyAsText()
+            assertEquals("OK", response)
+        }
+    }
 }
